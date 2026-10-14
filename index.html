@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DepRisk - Deployment Risk Assessment Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #7c3aed;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 100%);
+            color: var(--gray-800);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .logo-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .tagline {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2.5rem;
+        }
+        
+        @media (min-width: 992px) {
+            .app-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            border: 1px solid var(--gray-200);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .card-title i {
+            color: var(--primary);
+        }
+        
+        .risk-matrix {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .matrix-cell {
+            height: 60px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: transform 0.2s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .matrix-cell:hover {
+            transform: scale(1.05);
+        }
+        
+        .matrix-cell.selected {
+            border-color: var(--gray-800);
+        }
+        
+        .low-risk {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .medium-low {
+            background-color: #bbf7d0;
+            color: #047857;
+        }
+        
+        .medium {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .medium-high {
+            background-color: #fde68a;
+            color: #92400e;
+        }
+        
+        .high-risk {
+            background-color: #fecaca;
+            color: #991b1b;
+        }
+        
+        .matrix-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+        
+        .assessment-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .slider {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--gray-200);
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: var(--shadow);
+        }
+        
+        .slider-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--gray-200);
+        }
+        
+        .btn-block {
+            width: 100%;
+        }
+        
+        .risk-result {
+            text-align: center;
+            padding: 2rem;
+            border-radius: var(--radius);
+            margin-top: 2rem;
+        }
+        
+        .risk-score {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        
+        .risk-category {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .risk-description {
+            color: var(--gray-600);
+            max-width: 500px;
+            margin: 0 auto 1.5rem;
+        }
+        
+        .recommendations {
+            text-align: left;
+            margin-top: 2rem;
+        }
+        
+        .recommendations h3 {
+            margin-bottom: 1rem;
+            color: var(--gray-800);
+        }
+        
+        .recommendations ul {
+            padding-left: 1.5rem;
+        }
+        
+        .recommendations li {
+            margin-bottom: 0.75rem;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+        
+        .history-table th, .history-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .history-table th {
+            font-weight: 600;
+            color: var(--gray-700);
+            background-color: var(--gray-50);
+        }
+        
+        .history-table tr:hover {
+            background-color: var(--gray-50);
+        }
+        
+        .risk-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .low-badge {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .medium-badge {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .high-badge {
+            background-color: #fecaca;
+            color: #991b1b;
+        }
+        
+        footer {
+            margin-top: 4rem;
+            text-align: center;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--gray-200);
+        }
+        
+        .github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gray-700);
+            text-decoration: none;
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+        }
+        
+        .github-link:hover {
+            background-color: var(--gray-50);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h1 class="logo-text">DepRisk</h1>
+            </div>
+            <p class="tagline">Assess deployment risks with our interactive risk matrix. Evaluate, analyze, and mitigate potential issues before going live.</p>
+        </header>
+        
+        <div class="app-container">
+            <!-- Assessment Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-clipboard-check"></i> Risk Assessment</h2>
+                </div>
+                
+                <div class="risk-matrix">
+                    <div class="matrix-cell low-risk" data-impact="1" data-likelihood="1">Low Impact<br>Low Likelihood</div>
+                    <div class="matrix-cell medium-low" data-impact="2" data-likelihood="1">Medium Impact<br>Low Likelihood</div>
+                    <div class="matrix-cell medium" data-impact="3" data-likelihood="1">High Impact<br>Low Likelihood</div>
+                    <div class="matrix-cell medium-high" data-impact="4" data-likelihood="1">Very High Impact<br>Low Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="5" data-likelihood="1">Critical Impact<br>Low Likelihood</div>
+                    
+                    <div class="matrix-cell medium-low" data-impact="1" data-likelihood="2">Low Impact<br>Medium Likelihood</div>
+                    <div class="matrix-cell medium" data-impact="2" data-likelihood="2">Medium Impact<br>Medium Likelihood</div>
+                    <div class="matrix-cell medium-high" data-impact="3" data-likelihood="2">High Impact<br>Medium Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="4" data-likelihood="2">Very High Impact<br>Medium Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="5" data-likelihood="2">Critical Impact<br>Medium Likelihood</div>
+                    
+                    <div class="matrix-cell medium" data-impact="1" data-likelihood="3">Low Impact<br>High Likelihood</div>
+                    <div class="matrix-cell medium-high" data-impact="2" data-likelihood="3">Medium Impact<br>High Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="3" data-likelihood="3">High Impact<br>High Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="4" data-likelihood="3">Very High Impact<br>High Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="5" data-likelihood="3">Critical Impact<br>High Likelihood</div>
+                    
+                    <div class="matrix-cell medium-high" data-impact="1" data-likelihood="4">Low Impact<br>Very High Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="2" data-likelihood="4">Medium Impact<br>Very High Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="3" data-likelihood="4">High Impact<br>Very High Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="4" data-likelihood="4">Very High Impact<br>Very High Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="5" data-likelihood="4">Critical Impact<br>Very High Likelihood</div>
+                    
+                    <div class="matrix-cell high-risk" data-impact="1" data-likelihood="5">Low Impact<br>Critical Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="2" data-likelihood="5">Medium Impact<br>Critical Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="3" data-likelihood="5">High Impact<br>Critical Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="4" data-likelihood="5">Very High Impact<br>Critical Likelihood</div>
+                    <div class="matrix-cell high-risk" data-impact="5" data-likelihood="5">Critical Impact<br>Critical Likelihood</div>
+                </div>
+                
+                <div class="matrix-labels">
+                    <span>Impact (Low → Critical)</span>
+                    <span>Likelihood (Low → Critical)</span>
+                </div>
+                
+                <form id="assessmentForm" class="assessment-form">
+                    <div class="form-group">
+                        <label for="projectName" class="form-label">Project Name</label>
+                        <input type="text" id="projectName" class="form-input" placeholder="Enter project name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deploymentType" class="form-label">Deployment Type</label>
+                        <select id="deploymentType" class="form-select" required>
+                            <option value="">Select deployment type</option>
+                            <option value="web">Web Application</option>
+                            <option value="mobile">Mobile App</option>
+                            <option value="api">API/Backend Service</option>
+                            <option value="database">Database Migration</option>
+                            <option value="infrastructure">Infrastructure Change</option>
+                            <option value="security">Security Update</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Complexity Level</label>
+                        <div class="slider-container">
+                            <input type="range" id="complexitySlider" class="slider" min="1" max="10" value="5">
+                            <span id="complexityValue" class="slider-value">5</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: var(--gray-600);">
+                            <span>Simple</span>
+                            <span>Complex</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description" class="form-label">Risk Description</label>
+                        <textarea id="description" class="form-textarea" placeholder="Describe the potential risk, its causes, and potential impact..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="mitigation" class="form-label">Mitigation Plan</label>
+                        <textarea id="mitigation" class="form-textarea" placeholder="Describe your mitigation strategy..." required></textarea>
+                    </div>
+                    
+                    <input type="hidden" id="selectedImpact" value="3">
+                    <input type="hidden" id="selectedLikelihood" value="3">
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-calculator"></i> Calculate Risk Score
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-chart-bar"></i> Risk Analysis</h2>
+                    <button id="clearHistory" class="btn btn-secondary">
+                        <i class="fas fa-trash-alt"></i> Clear History
+                    </button>
+                </div>
+                
+                <div id="riskResult" class="risk-result" style="display: none;">
+                    <div id="riskScoreDisplay" class="risk-score">--</div>
+                    <div id="riskCategoryDisplay" class="risk-category">--</div>
+                    <p id="riskDescriptionDisplay" class="risk-description">Complete the assessment to see your risk score.</p>
+                    
+                    <div id="recommendationsDisplay" class="recommendations">
+                        <h3>Recommendations</h3>
+                        <ul id="recommendationsList"></ul>
+                    </div>
+                </div>
+                
+                <div id="historySection">
+                    <h3 style="margin-bottom: 1rem; color: var(--gray-800);">
+                        <i class="fas fa-history"></i> Assessment History
+                    </h3>
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Type</th>
+                                <th>Risk Score</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- History will be populated here -->
+                        </tbody>
+                    </table>
+                    <p id="emptyHistoryMessage" style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                        No assessments yet. Complete your first assessment to see history.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>DepRisk v1.0 • Deployment Risk Assessment Tool</p>
+            <p>Use this tool to evaluate deployment risks before going live. Always consult with your team for critical deployments.</p>
+            <a href="https://github.com/Arjundevkr/deprisk-app" class="github-link" target="_blank">
+                <i class="fab fa-github"></i> View on GitHub
+            </a>
+        </footer>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const matrixCells = document.querySelectorAll('.matrix-cell');
+        const assessmentForm = document.getElementById('assessmentForm');
+        const complexitySlider = document.getElementById('complexitySlider');
+        const complexityValue = document.getElementById('complexityValue');
+        const riskResult = document.getElementById('riskResult');
+        const riskScoreDisplay = document.getElementById('riskScoreDisplay');
+        const riskCategoryDisplay = document.getElementById('riskCategoryDisplay');
+        const riskDescriptionDisplay = document.getElementById('riskDescriptionDisplay');
+        const recommendationsList = document.getElementById('recommendationsList');
+        const historyTableBody = document.getElementById('historyTableBody');
+        const emptyHistoryMessage = document.getElementById('emptyHistoryMessage');
+        const clearHistoryBtn = document.getElementById('clearHistory');
+        const selectedImpactInput = document.getElementById('selectedImpact');
+        const selectedLikelihoodInput = document.getElementById('selectedLikelihood');
+        
+        // Initialize from localStorage
+        let assessmentHistory = JSON.parse(localStorage.getItem('depriskHistory')) || [];
+        
+        // Update slider value display
+        complexitySlider.addEventListener('input', () => {
+            complexityValue.textContent = complexitySlider.value;
+        });
+        
+        // Matrix cell selection
+        matrixCells.forEach(cell => {
+            cell.addEventListener('click', () => {
+                // Remove selection from all cells
+                matrixCells.forEach(c => c.classList.remove('selected'));
+                
+                // Select this cell
+                cell.classList.add('selected');
+                
+                // Update hidden inputs
+                selectedImpactInput.value = cell.dataset.impact;
+                selectedLikelihoodInput.value = cell.dataset.likelihood;
+            });
+        });
+        
+        // Calculate risk score
+        function calculateRiskScore(impact, likelihood, complexity) {
+            // Base score from matrix (impact × likelihood)
+            let baseScore = impact * likelihood;
+            
+            // Adjust based on complexity (1-10 scale)
+            const complexityFactor = 1 + (complexity - 5) * 0.1;
+            let adjustedScore = baseScore * complexityFactor;
+            
+            // Cap score at 100
+            return Math.min(Math.round(adjustedScore * 4), 100);
+        }
+        
+        // Get risk category based on score
+        function getRiskCategory(score) {
+            if (score <= 20) return { name: "Low Risk", color: "#10b981", class: "low-badge" };
+            if (score <= 40) return { name: "Medium-Low Risk", color: "#f59e0b", class: "medium-badge" };
+            if (score <= 60) return { name: "Medium Risk", color: "#f59e0b", class: "medium-badge" };
+            if (score <= 80) return { name: "High Risk", color: "#dc2626", class: "high-badge" };
+            return { name: "Critical Risk", color: "#991b1b", class: "high-badge" };
+        }
+        
+        // Get recommendations based on score and deployment type
+        function getRecommendations(score, deploymentType) {
+            const recommendations = [];
+            
+            if (score >= 70) {
+                recommendations.push("Consider postponing deployment until critical risks are mitigated");
+                recommendations.push("Schedule an emergency review with senior engineers and stakeholders");
+                recommendations.push("Implement comprehensive rollback plan with multiple checkpoints");
+            } else if (score >= 50) {
+                recommendations.push("Conduct targeted testing on high-risk areas before deployment");
+                recommendations.push("Prepare detailed rollback procedures");
+                recommendations.push("Schedule deployment during low-traffic maintenance window");
+            } else if (score >= 30) {
+                recommendations.push("Perform smoke tests after deployment");
+                recommendations.push("Monitor key metrics closely for 24 hours post-deployment");
+                recommendations.push("Keep team on standby for immediate response");
+            } else {
+                recommendations.push("Proceed with standard deployment procedures");
+                recommendations.push("Monitor standard health checks post-deployment");
+                recommendations.push("Update documentation with any learnings");
+            }
+            
+            // Type-specific recommendations
+            switch(deploymentType) {
+                case 'web':
+                    recommendations.push("Clear CDN cache after deployment");
+                    recommendations.push("Test across different browsers and devices");
+                    break;
+                case 'mobile':
+                    recommendations.push("Release to a small percentage of users first (canary release)");
+                    recommendations.push("Ensure app store rollback procedures are in place");
+                    break;
+                case 'api':
+                    recommendations.push("Maintain backward compatibility where possible");
+                    recommendations.push("Use feature flags to control rollout");
+                    break;
+                case 'database':
+                    recommendations.push("Take complete backup before making changes");
+                    recommendations.push("Test migration on staging environment first");
+                    break;
+                case 'infrastructure':
+                    recommendations.push("Deploy changes incrementally across regions");
+                    recommendations.push("Monitor resource utilization closely");
+                    break;
+                case 'security':
+                    recommendations.push("Verify all security controls are functioning");
+                    recommendations.push("Monitor for any anomalous activity post-deployment");
+                    break;
+            }
+            
+            return recommendations;
+        }
+        
+        // Add to history
+        function addToHistory(assessment) {
+            assessmentHistory.unshift(assessment);
+            
+            // Keep only last 10 assessments
+            if (assessmentHistory.length > 10) {
+                assessmentHistory = assessmentHistory.slice(0, 10);
+            }
+            
+            localStorage.setItem('depriskHistory', JSON.stringify(assessmentHistory));
+            updateHistoryDisplay();
+        }
+        
+        // Update history display
+        function updateHistoryDisplay() {
+            if (assessmentHistory.length === 0) {
+                emptyHistoryMessage.style.display = 'block';
+                historyTableBody.innerHTML = '';
+                return;
+            }
+            
+            emptyHistoryMessage.style.display = 'none';
+            
+            let html = '';
+            assessmentHistory.forEach(assessment => {
+                const category = getRiskCategory(assessment.score);
+                const date = new Date(assessment.timestamp).toLocaleDateString();
+                
+                html += `
+                    <tr>
+                        <td>${assessment.projectName}</td>
+                        <td>${assessment.deploymentType}</td>
+                        <td><span class="risk-badge ${category.class}">${assessment.score} (${category.name})</span></td>
+                        <td>${date}</td>
+                    </tr>
+                `;
+            });
+            
+            historyTableBody.innerHTML = html;
+        }
+        
+        // Form submission
+        assessmentForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Get form values
+            const projectName = document.getElementById('projectName').value;
+            const deploymentType = document.getElementById('deploymentType').value;
+            const complexity = parseInt(complexitySlider.value);
+            const description = document.getElementById('description').value;
+            const mitigation = document.getElementById('mitigation').value;
+            const impact = parseInt(selectedImpactInput.value) || 3;
+            const likelihood = parseInt(selectedLikelihoodInput.value) || 3;
+            
+            // Calculate risk score
+            const score = calculateRiskScore(impact, likelihood, complexity);
+            const category = getRiskCategory(score);
+            const recommendations = getRecommendations(score, deploymentType);
+            
+            // Update display
+            riskScoreDisplay.textContent = score;
+            riskScoreDisplay.style.color = category.color;
+            riskCategoryDisplay.textContent = category.name;
+            riskCategoryDisplay.style.color = category.color;
+            
+            // Generate description
+            const impactText = ['Low', 'Medium', 'High', 'Very High', 'Critical'][impact - 1];
+            const likelihoodText = ['Low', 'Medium', 'High', 'Very High', 'Critical'][likelihood - 1];
+            
+            riskDescriptionDisplay.textContent = 
+                `This deployment has ${impactText.toLowerCase()} impact with ${likelihoodText.toLowerCase()} likelihood. ` +
+                `The complexity level is ${complexity}/10. ` +
+                `Based on these factors, the calculated risk score is ${score}/100.`;
+            
+            // Update recommendations
+            recommendationsList.innerHTML = '';
+            recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recommendationsList.appendChild(li);
+            });
+            
+            // Show results
+            riskResult.style.display = 'block';
+            
+            // Add to history
+            const assessment = {
+                projectName,
+                deploymentType,
+                score,
+                complexity,
+                impact,
+                likelihood,
+                description,
+                mitigation,
+                timestamp: new Date().toISOString()
+            };
+            
+            addToHistory(assessment);
+            
+            // Scroll to results
+            riskResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+        
+        // Clear history
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm("Clear all assessment history? This action cannot be undone.")) {
+                assessmentHistory = [];
+                localStorage.removeItem('depriskHistory');
+                updateHistoryDisplay();
+                riskResult.style.display = 'none';
+            }
+        });
+        
+        // Initialize with default selection (middle cell)
+        matrixCells[12].classList.add('selected'); // Center cell (impact 3, likelihood 3)
+        
+        // Load history on page load
+        updateHistoryDisplay();
+        
+        // Add some sample data if empty
+        if (assessmentHistory.length === 0) {
+            // Add a sample entry for demonstration
+            const sampleAssessment = {
+                projectName: "E-commerce Platform Update",
+                deploymentType: "web",
+                score: 42,
+                complexity: 7,
+                impact: 4,
+                likelihood: 3,
+                description: "Major UI overhaul with new payment integration",
+                mitigation: "Canary release to 5% of users, comprehensive testing suite",
+                timestamp: new Date(Date.now() - 86400000).toISOString() // Yesterday
+            };
+            
+            assessmentHistory.push(sampleAssessment);
+            localStorage.setItem('depriskHistory', JSON.stringify(assessmentHistory));
+            updateHistoryDisplay();
+        }
+    </script>
+</body>
+</html>
